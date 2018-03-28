@@ -3,31 +3,75 @@ package xmlutil_test
 import (
 	"bytes"
 	"encoding/xml"
-	"os"
+	"reflect"
 	"testing"
 
 	"github.com/tajtiattila/xmlutil"
 )
 
 func TestEncodeDecode(t *testing.T) {
+	var doc xmlutil.Document
 	decoder := xml.NewDecoder(bytes.NewReader([]byte(sample)))
-	var root xmlutil.Node
-	if err := decoder.Decode(&root); err != nil {
+	if err := decoder.Decode(&doc); err != nil {
 		t.Fatal("can't decode:", err)
 	}
 
-	dump(t, &root)
-
-	root.Translate()
-
-	t.Log("translated:")
-	dump(t, &root)
-
-	enc := xml.NewEncoder(os.Stdout)
+	buf := new(bytes.Buffer)
+	enc := xml.NewEncoder(buf)
 	enc.Indent("", "  ")
-	err := enc.Encode(&root)
+	err := enc.Encode(doc)
 	if err != nil {
 		t.Fatal("can't encode", err)
+	}
+
+	var cmp xmlutil.Document
+	decoder = xml.NewDecoder(bytes.NewReader(buf.Bytes()))
+	if err := decoder.Decode(&cmp); err != nil {
+		t.Fatal("can't decode result:", err)
+	}
+
+	t.Log(buf.String())
+	compareTrees(t, doc.Root, cmp.Root)
+}
+
+func compareTrees(t *testing.T, a *xmlutil.Node, b *xmlutil.Node) {
+	cha, chb := nodes(a), nodes(b)
+
+	for {
+		an, aok := <-cha
+		bn, bok := <-chb
+		if !aok || !bok {
+			if aok != bok {
+				t.Fatal("trees differ")
+			}
+			return
+		}
+		sameNode(t, an, bn)
+	}
+}
+
+func nodes(n *xmlutil.Node) <-chan *xmlutil.Node {
+	ch := make(chan *xmlutil.Node)
+	var f func(n *xmlutil.Node)
+	f = func(n *xmlutil.Node) {
+		ch <- n
+		for _, child := range n.Child {
+			f(child)
+		}
+	}
+	go func() {
+		defer close(ch)
+		f(n)
+	}()
+	return ch
+}
+
+func sameNode(t *testing.T, a, b *xmlutil.Node) {
+	if a.XMLName != b.XMLName {
+		t.Fatalf("nodes names differ: %v != %v", a.XMLName, b.XMLName)
+	}
+	if !reflect.DeepEqual(a.Attr, b.Attr) {
+		t.Fatalf("attributes differ in node: %v", a.XMLName)
 	}
 }
 

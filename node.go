@@ -5,15 +5,19 @@ import (
 	"strings"
 )
 
+// Node is represents an node in an XML document.
 type Node struct {
 	XMLName xml.Name   // node name and namespace
-	Attr    []xml.Attr // captures all unbound attributes and XMP qualifiers
+	Attr    []xml.Attr // attributes and namespace declarations
 	Value   string     // node char data
 	Child   []*Node    // child nodes
 
+	// tr is used to translate namespaces URIs to their respective prefixes.
+	// It is updated and used only when the document is marshaled.
 	tr translateMap
 }
 
+// MarshalXML marshals n in XML format.
 func (n *Node) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	if n.XMLName.Local == "" {
 		return nil
@@ -29,6 +33,7 @@ func (n *Node) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	}, start)
 }
 
+// UnmarshalXML unmarshals n from XML format.
 func (n *Node) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 
 	n.XMLName = start.Name

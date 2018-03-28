@@ -25,10 +25,7 @@ func (tr translateMap) translate(n xml.Name) xml.Name {
 	return n
 }
 
-func (n *Node) Translate() {
-	n.translate(nil)
-}
-
+// startElement returns the translated start element for n.
 func (n *Node) startElement() xml.StartElement {
 	if n.tr == nil {
 		return xml.StartElement{
