@@ -31,7 +31,7 @@ func TestEncodeDecode(t *testing.T) {
 	}
 
 	t.Log(buf.String())
-	compareTrees(t, doc.Root, cmp.Root)
+	compareTrees(t, doc.Node, cmp.Node)
 }
 
 func compareTrees(t *testing.T, a *xmlutil.Node, b *xmlutil.Node) {
@@ -67,11 +67,11 @@ func nodes(n *xmlutil.Node) <-chan *xmlutil.Node {
 }
 
 func sameNode(t *testing.T, a, b *xmlutil.Node) {
-	if a.XMLName != b.XMLName {
-		t.Fatalf("nodes names differ: %v != %v", a.XMLName, b.XMLName)
+	if a.Name != b.Name {
+		t.Fatalf("nodes names differ: %v != %v", a.Name, b.Name)
 	}
 	if !reflect.DeepEqual(a.Attr, b.Attr) {
-		t.Fatalf("attributes differ in node: %v", a.XMLName)
+		t.Fatalf("attributes differ in node: %v", a.Name)
 	}
 }
 

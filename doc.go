@@ -6,17 +6,17 @@ import "encoding/xml"
 
 // Document is an XML document that keeps namespaces prefixes when marshaling.
 type Document struct {
-	Root *Node
+	*Node // document root
 }
 
 // MarshalXML marshals d in XML format.
 func (d Document) MarshalXML(enc *xml.Encoder, start xml.StartElement) error {
-	d.Root.translate(nil)
-	return d.Root.MarshalXML(enc, start)
+	d.Node.translate(nil)
+	return d.Node.MarshalXML(enc, start)
 }
 
 // UnmarshalXML unmarshals d from XML format.
 func (d *Document) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) error {
-	d.Root = new(Node)
-	return d.Root.UnmarshalXML(dec, start)
+	d.Node = new(Node)
+	return d.Node.UnmarshalXML(dec, start)
 }

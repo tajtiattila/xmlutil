@@ -29,13 +29,13 @@ func (tr translateMap) translate(n xml.Name) xml.Name {
 func (n *Node) startElement() xml.StartElement {
 	if n.tr == nil {
 		return xml.StartElement{
-			Name: n.XMLName,
+			Name: n.Name,
 			Attr: n.Attr,
 		}
 	}
 
 	var start xml.StartElement
-	start.Name = n.tr.translate(n.XMLName)
+	start.Name = n.tr.translate(n.Name)
 	start.Attr = make([]xml.Attr, len(n.Attr))
 	for i, a := range n.Attr {
 		start.Attr[i] = xml.Attr{
