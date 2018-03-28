@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/tajtiattila/xmlutil"
@@ -169,3 +170,52 @@ const sample = `<?xpacket begin='` + "\ufeff" + `' id='W5M0MpCehiHzreSzNTczkc9d'
 </rdf:RDF>
 </x:xmpmeta>
 <?xpacket end='w'?>`
+
+func TestCreate(t *testing.T) {
+	const adobeMeta = "adobe:ns:meta/"
+
+	var doc xmlutil.Document
+	doc.Node = buildNode(nil, adobeMeta, "xmpmeta",
+		ns("x", adobeMeta),
+		attr(adobeMeta, "xmptk", "xmlutil"))
+
+	const rdfns = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+
+	rdf := buildNode(doc.Node, rdfns, "RDF",
+		ns("rdf", rdfns))
+
+	const exifns = "http://ns.adobe.com/exif/1.0/"
+
+	desc := buildNode(rdf, rdfns, "Description",
+		attr(rdfns, "about", ""),
+		ns("exif", exifns))
+
+	buildNode(desc, exifns, "GPSLatitude", value("37,45.089950N"))
+	buildNode(desc, exifns, "GPSLongitude", value("122,25.767517W"))
+
+	buf := new(bytes.Buffer)
+	enc := xml.NewEncoder(buf)
+	enc.Indent("", " ")
+	err := enc.Encode(doc)
+	if err != nil {
+		t.Fatal("can't encode", err)
+	}
+
+	got := strings.TrimSpace(buf.String())
+
+	want := `<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="xmlutil">
+ <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <rdf:Description rdf:about="" xmlns:exif="http://ns.adobe.com/exif/1.0/">
+   <exif:GPSLatitude>37,45.089950N</exif:GPSLatitude>
+   <exif:GPSLongitude>122,25.767517W</exif:GPSLongitude>
+  </rdf:Description>
+ </rdf:RDF>
+</x:xmpmeta>`
+
+	if got != want {
+		t.Log("encode mismatch")
+		t.Log("got:", got)
+		t.Log("want:", want)
+		t.Fail()
+	}
+}

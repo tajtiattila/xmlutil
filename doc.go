@@ -2,7 +2,10 @@
 // namespace prefixes when marshaling XML.
 package xmlutil
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+	"errors"
+)
 
 // Document is an XML document that keeps namespaces prefixes when marshaling.
 type Document struct {
@@ -11,6 +14,9 @@ type Document struct {
 
 // MarshalXML marshals d in XML format.
 func (d Document) MarshalXML(enc *xml.Encoder, start xml.StartElement) error {
+	if d.Node == nil {
+		return errors.New("xmlutil: empty document")
+	}
 	d.Node.translate(nil)
 	return d.Node.MarshalXML(enc, start)
 }
