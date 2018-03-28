@@ -8,8 +8,10 @@ import (
 type Node struct {
 	XMLName xml.Name   // node name and namespace
 	Attr    []xml.Attr // captures all unbound attributes and XMP qualifiers
-	Value   string
-	Child   []*Node // child nodes
+	Value   string     // node char data
+	Child   []*Node    // child nodes
+
+	tr translateMap
 }
 
 func (n *Node) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
@@ -17,8 +19,7 @@ func (n *Node) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 		return nil
 	}
 
-	start.Name = n.XMLName
-	start.Attr = n.Attr
+	start = n.startElement()
 	return e.EncodeElement(struct {
 		Data  string `xml:",chardata"`
 		Child []*Node
